@@ -18,6 +18,16 @@ use yii\db\ActiveRecord;
  */
 class Contract extends ActiveRecord
 {
+    public static function create($employeeId, $lastName, $firstName, $contractDate)
+    {
+        $contract = new self();
+        $contract->employee_id = $employeeId;
+        $contract->first_name = $firstName;
+        $contract->last_name = $lastName;
+        $contract->date_open = $contractDate;
+        return $contract;
+    }
+
     /**
      * @inheritdoc
      */

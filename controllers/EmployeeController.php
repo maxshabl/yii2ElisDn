@@ -2,23 +2,29 @@
 
 namespace app\controllers;
 
-use app\models\Contract;
+use app\forms\EmployeeCreateForm;
 use app\models\Interview;
-use app\models\Order;
-use app\models\Recruit;
+use app\services\StaffService;
 use Yii;
 use app\models\Employee;
 use app\forms\search\EmployeeSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\web\ServerErrorHttpException;
 
 /**
  * EmployeeController implements the CRUD actions for Employee model.
  */
 class EmployeeController extends Controller
 {
+    private $staffService;
+
+    public function __construct($id, $module, StaffService $staffService, $config = [])
+    {
+        $this->staffService = $staffService;
+        parent::__construct($id, $module, $config = []);
+    }
+
     /**
      * @inheritdoc
      */
@@ -70,58 +76,32 @@ class EmployeeController extends Controller
      */
     public function actionCreate($interview_id = null)
     {
-        $model = new Employee();
-        $model->order_date = date('Y-m-d');
-        $model->contract_date = date('Y-m-d');
-        $model->recruit_date = date('Y-m-d');
-
+        /** @var Interview $interview */
         if ($interview_id) {
             $interview = $this->findInterviewModel($interview_id);
-            $model->last_name = $interview->last_name;
-            $model->first_name = $interview->first_name;
-            $model->email = $interview->email;
         } else {
             $interview = null;
         }
 
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $transaction = Yii::$app->db->beginTransaction();
-            try {
-                if ($interview) {
-                    $interview->status = Interview::STATUS_PASS;
-                    $interview->save();
-                }
+        $form = new EmployeeCreateForm($interview);
 
-                $model->save(false);
-
-                $order = new Order();
-                $order->date = $model->order_date;
-                $order->save(false);
-
-                $recruit = new Contract();
-                $recruit->employee_id = $model->id;
-                $recruit->last_name = $model->last_name;
-                $recruit->first_name = $model->first_name;
-                $recruit->date_open = $model->contract_date;
-                $recruit->save(false);
-
-                $recruit = new Recruit();
-                $recruit->employee_id = $model->id;
-                $recruit->order_id = $order->id;
-                $recruit->date = $model->recruit_date;
-                $recruit->save(false);
-
-                $transaction->commit();
-                Yii::$app->session->setFlash('success', 'Employee is recruit.');
-                return $this->redirect(['view', 'id' => $model->id]);
-            } catch (\Exception $e) {
-                $transaction->rollBack();
-                throw new ServerErrorHttpException($e->getMessage());
-            }
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $employee = $this->staffService->createEmployee(
+                $interview->id,
+                $form->firstName,
+                $form->lastName,
+                $form->address,
+                $form->email,
+                $form->orderDate,
+                $form->contractDate,
+                $form->recruitDate
+            );
+            Yii::$app->session->setFlash('success', 'Employee is recruit.');
+            return $this->redirect(['view', 'id' => $employee->id]);
         }
 
         return $this->render('create', [
-            'model' => $model,
+            'createForm' => $form,
         ]);
     }
 

@@ -23,6 +23,11 @@ use yii\db\ActiveRecord;
  */
 class Assignment extends ActiveRecord
 {
+    public static function create($orderId, $employeeId, $positionId, $salary, $date, $rate)
+    {
+        return new self();
+    }
+
     /**
      * @inheritdoc
      */

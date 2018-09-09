@@ -2,37 +2,42 @@
 
 namespace app\forms;
 
+use app\models\Interview;
 use yii\base\Model;
 
-class InterviewJoinForm extends Model
+class InterviewEditForm extends Model
 {
-    public $date;
     public $firstName;
     public $lastName;
     public $email;
 
+    private $interview;
+
+    public function __construct(Interview $interview, $config = [])
+    {
+        $this->interview = $interview;
+        parent::__construct($config);
+    }
+
     public function init()
     {
-        $this->date = date('Y-m-d');
+        $this->lastName = $this->interview->last_name;
+        $this->firstName = $this->interview->first_name;
+        $this->email = $this->interview->email;
     }
 
     public function rules()
     {
         return [
-            [['date', 'firstName', 'lastName'], 'required'],
-            [['date'], 'date', 'format' => 'php:Y-m-d'],
+            [['firstName', 'lastName'], 'required'],
             [['email'], 'email'],
             [['firstName', 'lastName', 'email'], 'string', 'max' => 255],
         ];
     }
 
-    /**
-     * @inheritdoc
-     */
     public function attributeLabels()
     {
         return [
-            'date' => 'Date',
             'firstName' => 'First Name',
             'lastName' => 'Last Name',
             'email' => 'Email',

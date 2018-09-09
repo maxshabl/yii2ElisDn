@@ -18,6 +18,15 @@ use yii\db\ActiveRecord;
  */
 class Recruit extends ActiveRecord
 {
+    public static function create($employeeId, $orderId, $date)
+    {
+        $recruit = new self();
+        $recruit->employee_id = $employeeId;
+        $recruit->order_id = $orderId;
+        $recruit->date = $date;
+        return $recruit;
+    }
+
     /**
      * @inheritdoc
      */

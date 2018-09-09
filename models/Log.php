@@ -31,7 +31,6 @@ class Log extends ActiveRecord
     public function rules()
     {
         return [
-            [['user_id'], 'required'],
             [['user_id'], 'integer'],
             [['message'], 'string'],
         ];

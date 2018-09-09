@@ -16,10 +16,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?php if ($model->status != Interview::STATUS_PASS): ?>
+        <?= Html::a('Edit', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?php if ($model->isRecruitable()): ?>
             <?= Html::a('Recruit', ['employee/create', 'interview_id' => $model->id], ['class' => 'btn btn-success']) ?>
         <?php endif; ?>
+        <?= Html::a('Reject', ['reject', 'id' => $model->id], ['class' => 'btn btn-danger']) ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [

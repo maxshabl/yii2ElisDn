@@ -2,7 +2,10 @@
 
 namespace app\controllers;
 
+use app\forms\InterviewEditForm;
 use app\forms\InterviewJoinForm;
+use app\forms\InterviewMoveForm;
+use app\forms\InterviewRejectForm;
 use app\services\StaffService;
 use Yii;
 use app\models\Interview;
@@ -16,6 +19,14 @@ use yii\filters\VerbFilter;
  */
 class InterviewController extends Controller
 {
+    private $staffService;
+
+    public function __construct($id, $module, StaffService $staffService, $config = [])
+    {
+        $this->staffService = $staffService;
+        parent::__construct($id, $module, $config = []);
+    }
+
     /**
      * @inheritdoc
      */
@@ -68,16 +79,12 @@ class InterviewController extends Controller
         $form = new InterviewJoinForm();
 
         if ($form->load(Yii::$app->request->post()) && $form->validate()) {
-
-            $service = new StaffService();
-
-            $model = $service->joinToInterview(
+            $model = $this->staffService->joinToInterview(
                 $form->lastName,
                 $form->firstName,
                 $form->email,
                 $form->date
             );
-
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('join', [
@@ -94,13 +101,61 @@ class InterviewController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = $this->findModel($id);
+        $interview = $this->findModel($id);
+        $form = new InterviewEditForm($interview);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $this->staffService->editInterview(
+                $interview->id,
+                $form->lastName,
+                $form->firstName,
+                $form->email
+            );
+            return $this->redirect(['view', 'id' => $interview->id]);
         } else {
             return $this->render('update', [
-                'model' => $model,
+                'editForm' => $form,
+                'model' => $interview,
+            ]);
+        }
+    }
+
+    /**
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionMove($id)
+    {
+        $interview = $this->findModel($id);
+        $form = new InterviewMoveForm($interview);
+
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $this->staffService->moveInterview($interview->id, $form->date);
+            return $this->redirect(['view', 'id' => $interview->id]);
+        } else {
+            return $this->render('update', [
+                'editForm' => $form,
+                'model' => $interview,
+            ]);
+        }
+    }
+
+    /**
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionReject($id)
+    {
+        $interview = $this->findModel($id);
+        $form = new InterviewRejectForm();
+
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $this->staffService->rejectInterview($interview->id, $form->reason);
+            return $this->redirect(['view', 'id' => $interview->id]);
+        } else {
+            return $this->render('reject', [
+                'rejectForm' => $form,
+                'model' => $interview,
             ]);
         }
     }
